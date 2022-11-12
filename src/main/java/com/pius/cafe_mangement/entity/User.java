@@ -9,6 +9,14 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @NamedQuery(name = "User.findByEmailId", query = "select u  from User u where u.email=:email")
+
+@NamedQuery(name = "User.getAllUsers", query = "select new com.pius.cafe_mangement.wrapper.UserWrapper(u.id, u.name,u.email,u.contactNumber,u.status) from User u where u.role='user'")
+
+@NamedQuery(name = "User.updateStatus", query = "update User u set u.status=:status where u.id=:id")
+
+@NamedQuery(name = "User.getAllUsers", query = "select u.email from User u where u.role='admin'")
+
+
 @Entity
 @Data
 @DynamicUpdate
