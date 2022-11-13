@@ -7,6 +7,7 @@ import com.pius.cafe_mangement.jwt.JwtFilter;
 import com.pius.cafe_mangement.jwt.JwtUtil;
 import com.pius.cafe_mangement.repository.UserRepository;
 import com.pius.cafe_mangement.service.UserService;
+import com.pius.cafe_mangement.utils.EmailUtils;
 import com.pius.cafe_mangement.utils.Utils;
 import com.pius.cafe_mangement.wrapper.UserWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     JwtFilter jwtFilter;
+
+    @Autowired
+    EmailUtils emailUtils;
 
     @Override
     public ResponseEntity<String> signUp(Map<String, String> requestMap) {
@@ -155,7 +159,20 @@ public class UserServiceImpl implements UserService {
         return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private void sendMailToAllAdmin(String status, String email, List<String> allAdmin) {
+    private void sendMailToAllAdmin(String status, String user, List<String> allAdmin) {
+        allAdmin.remove(jwtFilter.getCurrentUser());
+        if (status != null && status.equalsIgnoreCase("true")){
+            emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(),
+                    "Account Approved",
+                    "User:-"+user+"\n is approved by \nADMIN:-"+jwtFilter.getCurrentUser(), allAdmin);
+
+
+        }else {
+            emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(),
+                    "Account Disabled",
+                    "User:-"+user+"\n is disabled by \nADMIN:-"+jwtFilter.getCurrentUser(), allAdmin);
+
+        }
     }
 
 }
