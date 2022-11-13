@@ -64,4 +64,36 @@ public class UserControllerImpl implements UserController {
         return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
+
+    @Override
+    public ResponseEntity<String> checkToken() {
+        try {
+            userService.checkToken();
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<String> changePassword(Map<String, String> requestMap) {
+        try {
+            return userService.changePassword(requestMap);
+
+        }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+        return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<String> forgotPassword(Map<String, String> requestMap) {
+        try {
+            return userService.forgotPassword(requestMap);
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

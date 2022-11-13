@@ -19,6 +19,15 @@ public interface UserController {
     @GetMapping(path = "/get")
     public ResponseEntity<List<UserWrapper>> getAllUsers();
 
-    @PostMapping(path = "update")
+    @PostMapping(path = "/update")
     public ResponseEntity<String> update(@RequestBody(required = true)Map<String , String> requestMap);
+
+    @GetMapping(path = "/checkToken")
+    ResponseEntity<String> checkToken();
+
+    @PostMapping(path = "/changePassword")
+    ResponseEntity<String> changePassword(@RequestBody(required = true)Map<String, String> requestMap);
+
+    @PostMapping(path = "/forgotPassword")
+    public ResponseEntity<String> forgotPassword(@RequestBody(required = true)Map<String, String> requestMap);
 }
