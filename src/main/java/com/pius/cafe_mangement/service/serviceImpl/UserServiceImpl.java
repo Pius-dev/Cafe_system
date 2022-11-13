@@ -3,11 +3,13 @@ package com.pius.cafe_mangement.service.serviceImpl;
 import com.pius.cafe_mangement.contants.CafeContants;
 import com.pius.cafe_mangement.entity.User;
 import com.pius.cafe_mangement.jwt.CustomerUsersDetailsService;
+import com.pius.cafe_mangement.jwt.JwtFilter;
 import com.pius.cafe_mangement.jwt.JwtUtil;
-import com.pius.cafe_mangement.repository.UserRespository;
+import com.pius.cafe_mangement.repository.UserRepository;
 import com.pius.cafe_mangement.service.UserService;
+import com.pius.cafe_mangement.utils.EmailUtils;
 import com.pius.cafe_mangement.utils.Utils;
-import jdk.jshell.execution.Util;
+import com.pius.cafe_mangement.wrapper.UserWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,15 +19,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    UserRespository userRespository;
+    UserRepository userRepository;
 
     @Autowired
     AuthenticationManager authenticationManager;
@@ -36,14 +37,20 @@ public class UserServiceImpl implements UserService {
     @Autowired
     JwtUtil jwtUtil;
 
+    @Autowired
+    JwtFilter jwtFilter;
+
+    @Autowired
+    EmailUtils emailUtils;
+
     @Override
     public ResponseEntity<String> signUp(Map<String, String> requestMap) {
         log.info("inside signUp {}" + requestMap);
         try {
             if (validateSignUpMap(requestMap)) {
-                User user = userRespository.findByEmailId(requestMap.get("email"));
+                User user = userRepository.findByEmailId(requestMap.get("email"));
                 if (Objects.isNull(user)) {
-                    userRespository.save(getUserFromMap(requestMap));
+                    userRepository.save(getUserFromMap(requestMap));
                     return Utils.getResponseEntity("Successfully Registered", HttpStatus.OK);
                 } else {
                     return Utils.getResponseEntity("Email already exits", HttpStatus.BAD_REQUEST);
@@ -108,6 +115,64 @@ public class UserServiceImpl implements UserService {
         }
         return new ResponseEntity<String>("{\"message\":\"" + "Invalid Credentials." + "\"}",
                 HttpStatus.BAD_REQUEST);
+    }
+
+    @Override
+    public ResponseEntity<List<UserWrapper>> getAllUsers() {
+        try {
+            if(jwtFilter.isAdmin()){
+                return new ResponseEntity<>(userRepository.getAllUsers(), HttpStatus.OK);
+
+            }else {
+                return new ResponseEntity<>(new ArrayList<>(), HttpStatus.UNAUTHORIZED);
+            }
+
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+        return new ResponseEntity<>(new ArrayList<>(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<String> update(Map<String, String> requestMap) {
+        try {
+            if (jwtFilter.isAdmin()){
+                Optional<User> optional = userRepository.findById(Integer.parseInt(requestMap.get("id")));
+                if (!optional.isEmpty()){
+                    userRepository.updateStatus(requestMap.get("status"), Integer.parseInt(requestMap.get("id")));
+                    sendMailToAllAdmin(requestMap.get("status"), optional.get().getEmail(), userRepository.getAllAdmin());
+                    return Utils.getResponseEntity("User status updated successfully.", HttpStatus.OK);
+                }else {
+                    return Utils.getResponseEntity("User ID does not exit", HttpStatus.OK);
+                }
+
+
+            }else {
+                return Utils.getResponseEntity(CafeContants.UNAUTHORIZED_ACCESS, HttpStatus.UNAUTHORIZED);
+            }
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private void sendMailToAllAdmin(String status, String user, List<String> allAdmin) {
+        allAdmin.remove(jwtFilter.getCurrentUser());
+        if (status != null && status.equalsIgnoreCase("true")){
+            emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(),
+                    "Account Approved",
+                    "User:-"+user+"\n is approved by \nADMIN:-"+jwtFilter.getCurrentUser(), allAdmin);
+
+
+        }else {
+            emailUtils.sendSimpleMessage(jwtFilter.getCurrentUser(),
+                    "Account Disabled",
+                    "User:-"+user+"\n is disabled by \nADMIN:-"+jwtFilter.getCurrentUser(), allAdmin);
+
+        }
     }
 
 }

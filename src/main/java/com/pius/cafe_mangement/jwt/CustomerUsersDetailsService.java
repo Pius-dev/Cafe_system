@@ -1,7 +1,7 @@
 package com.pius.cafe_mangement.jwt;
 
 import com.pius.cafe_mangement.entity.User;
-import com.pius.cafe_mangement.repository.UserRespository;
+import com.pius.cafe_mangement.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,14 +16,14 @@ import java.util.Objects;
 @Service
 public class CustomerUsersDetailsService implements UserDetailsService {
     @Autowired
-    UserRespository userRespository;
+    UserRepository userRepository;
 
     private User userDetail;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.info("inside loadUserByUsername {}", username);
-        userDetail = userRespository.findByEmailId(username);
+        userDetail = userRepository.findByEmailId(username);
         if (!Objects.isNull(userDetail)) {
             return new org.springframework.security.core.userdetails.User(userDetail.getEmail(), userDetail.getPassword(), new ArrayList<>());
 
