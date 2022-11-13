@@ -1,5 +1,6 @@
 package com.pius.cafe_mangement.service.serviceImpl;
 
+import com.google.common.base.Strings;
 import com.pius.cafe_mangement.contants.CafeContants;
 import com.pius.cafe_mangement.entity.User;
 import com.pius.cafe_mangement.jwt.CustomerUsersDetailsService;
@@ -159,6 +160,7 @@ public class UserServiceImpl implements UserService {
         return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+
     private void sendMailToAllAdmin(String status, String user, List<String> allAdmin) {
         allAdmin.remove(jwtFilter.getCurrentUser());
         if (status != null && status.equalsIgnoreCase("true")){
@@ -173,6 +175,45 @@ public class UserServiceImpl implements UserService {
                     "User:-"+user+"\n is disabled by \nADMIN:-"+jwtFilter.getCurrentUser(), allAdmin);
 
         }
+    }
+
+    @Override
+    public ResponseEntity<String> checkToken() {
+        return Utils.getResponseEntity("true", HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<String> changePassword(Map<String, String> requestMap) {
+        try {
+            User userObj = userRepository.findByEmail(jwtFilter.getCurrentUser());
+            if (!userObj.equals(null)){
+                if (userObj.getPassword().equals(requestMap.get("oldPassword"))){
+                    userObj.setPassword(requestMap.get("newPassword"));
+                    userRepository.save(userObj);
+                    return Utils.getResponseEntity("Password updated Successfully", HttpStatus.OK);
+                }
+                return Utils.getResponseEntity("Incorrect Old Password", HttpStatus.BAD_REQUEST);
+
+            }
+            return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Override
+    public ResponseEntity<String> forgotPassword(Map<String, String> requestMap) {
+        try {
+            User user = userRepository.findByEmail(requestMap.get("email"));
+            if (!Objects.isNull(user) && !Strings.isNullOrEmpty(user.getEmail()))
+                emailUtils.forgotPasswordMail(user.getEmail(),"Requested Login Credentials by Cafe management System", user.getPassword());
+            return Utils.getResponseEntity("Check Your Email for credentials.", HttpStatus.OK);
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return Utils.getResponseEntity(CafeContants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }

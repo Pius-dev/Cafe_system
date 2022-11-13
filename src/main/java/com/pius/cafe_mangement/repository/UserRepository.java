@@ -17,9 +17,13 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     List<UserWrapper> getAllUsers();
 
+    List<String> getAllAdmin();
+
+    User findByEmail(String email);
+
     @Transactional
     @Modifying
     Integer updateStatus(@Param("status")String status, @Param("id") Integer id);
 
-    List<String> getAllAdmin();
+
 }
