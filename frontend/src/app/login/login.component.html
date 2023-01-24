@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <div class="login-card">
+      <h2>Login</h2>
+      <h3>Enter your credentials</h3>
+      <form class="login-form" [formGroup]="loginForm">
+        <input
+          placeholder="Email"
+          formControlName="email"
+          required
+          type="email"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          formControlName="password"
+          required
+          [type]="password ? 'password' : 'text'"
+        />
+        <a (click)="handleForgotPasswordAction()">Forgot your password?</a>
+        <button
+          type="submit"
+          (click)="handleSubmit()"
+          [disabled]="validateSubmit() || !(loginForm.valid && loginForm.dirty)"
+        >
+          LOGIN
+        </button>
+      </form>
+      <h3>New User ?</h3>
+      <a href="#">click to Register</a>
+    </div>
+  </body>
+</html>
